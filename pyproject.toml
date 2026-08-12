@@ -1,0 +1,26 @@
+[project]
+name = "bot-fleet-orchestrator"
+version = "1.0.0"
+description = "Process supervisor and Telegram control panel for a fleet of Python bots."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { file = "LICENSE" }
+authors = [{ name = "Vladislav Krasnov", url = "https://github.com/VladislavKrasnov" }]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+testpaths = ["tests"]
+markers = ["slow: provisions a real virtual environment and spawns real processes"]
+
+[tool.black]
+line-length = 110
+target-version = ["py311"]
+
+[tool.ruff]
+line-length = 110
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]

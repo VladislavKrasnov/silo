@@ -1,0 +1,20 @@
+services:
+  orchestrator:
+    build: .
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      PROJECTS_ROOT_DIR: /srv/projects
+      STATE_DIR: /srv/state
+      ISOLATION_BACKEND: bubblewrap
+    volumes:
+      - projects:/srv/projects
+      - state:/srv/state
+    security_opt:
+      - seccomp:unconfined
+    stop_grace_period: 30s
+
+volumes:
+  projects:
+  state:
