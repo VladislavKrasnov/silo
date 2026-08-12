@@ -15,7 +15,7 @@ env/
 .env.*
 !.env.example
 
-projects/
+/projects/
 state/
 *.db
 *.db-wal
