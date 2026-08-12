@@ -4,13 +4,14 @@ from typing import Final
 
 STRINGS: Final[dict[str, dict[str, str]]] = {
     "language.pick_title": {"en": "Choose your language", "ru": "Выберите язык"},
-    "language.button_en": {"en": "🇬🇧 English", "ru": "🇬🇧 English"},
-    "language.button_ru": {"en": "🇷🇺 Русский", "ru": "🇷🇺 Русский"},
+    "language.button_en": {"en": "English", "ru": "English"},
+    "language.button_ru": {"en": "Русский", "ru": "Русский"},
     "language.changed": {"en": "Language set to English.", "ru": "Язык переключён на русский."},
     "language.settings_row": {"en": "Language", "ru": "Язык"},
     "menu.title": {"en": "Fleet orchestrator", "ru": "Оркестратор ботов"},
     "menu.start_restart": {"en": "Start / Restart", "ru": "Запуск / Перезапуск"},
     "menu.stop": {"en": "Stop", "ru": "Стоп"},
+    "menu.status": {"en": "Status", "ru": "Статус"},
     "menu.projects": {"en": "Projects", "ru": "Проекты"},
     "menu.settings": {"en": "Settings", "ru": "Настройки"},
     "menu.no_projects": {
@@ -65,6 +66,42 @@ STRINGS: Final[dict[str, dict[str, str]]] = {
     "projects.verb_stopped": {"en": "Stopped", "ru": "Остановлен"},
     "projects.verb_restarted": {"en": "Restarted", "ru": "Перезапущен"},
     "projects.verb_rebuilding": {"en": "Rebuilding", "ru": "Пересобирается"},
+    "projects.status_running": {"en": "Running", "ru": "Работает"},
+    "projects.status_stopped": {"en": "Stopped", "ru": "Остановлен"},
+    "projects.progress_start": {"en": "Starting {slug}…", "ru": "Запускаю {slug}…"},
+    "projects.progress_stop": {"en": "Stopping {slug}…", "ru": "Останавливаю {slug}…"},
+    "projects.progress_restart": {"en": "Restarting {slug}…", "ru": "Перезапускаю {slug}…"},
+    "projects.progress_rebuild": {"en": "Rebuilding {slug}…", "ru": "Пересобираю {slug}…"},
+    "projects.progress_pull": {
+        "en": "Pulling the latest revision for {slug}…",
+        "ru": "Загружаю обновления для {slug}…",
+    },
+    "projects.progress_delete": {"en": "Deleting {slug}…", "ru": "Удаляю {slug}…"},
+    "projects.progress_stop_all": {"en": "Stopping every project…", "ru": "Останавливаю все проекты…"},
+    "projects.progress_restart_all": {
+        "en": "Restarting the whole fleet…",
+        "ru": "Перезапускаю весь оркестратор…",
+    },
+    "projects.stop_all_button": {"en": "Stop everything", "ru": "Остановить всё"},
+    "projects.restart_all_button": {"en": "Restart everything", "ru": "Перезапустить всё"},
+    "projects.stop_all_confirm_title": {
+        "en": "Stop every running project?",
+        "ru": "Остановить все запущенные проекты?",
+    },
+    "projects.stop_all_confirm_body": {
+        "en": "Every running project stops. Projects with autostart can be started again from their menu.",
+        "ru": "Все запущенные проекты будут остановлены. Проекты с автозапуском можно снова "
+        "запустить из их меню.",
+    },
+    "projects.restart_all_confirm_title": {
+        "en": "Restart the whole fleet?",
+        "ru": "Перезапустить весь оркестратор?",
+    },
+    "projects.restart_all_confirm_body": {
+        "en": "Every running project restarts and every stopped project starts.",
+        "ru": "Все запущенные проекты перезапустятся, а остановленные — запустятся.",
+    },
+    "projects.open_project": {"en": "Open project", "ru": "Открыть проект"},
     "projects.button_stop": {"en": "Stop", "ru": "Стоп"},
     "projects.button_start": {"en": "Start", "ru": "Старт"},
     "projects.button_restart": {"en": "Restart", "ru": "Рестарт"},
@@ -136,6 +173,11 @@ STRINGS: Final[dict[str, dict[str, str]]] = {
     },
     "ingest.public_no_account": {"en": "Public, no account", "ru": "Публичный, без аккаунта"},
     "ingest.cloning": {"en": "Cloning.", "ru": "Клонирую."},
+    "ingest.cloning_progress": {
+        "en": "Cloning the repository… this can take a few minutes.",
+        "ru": "Клонирую репозиторий… это может занять несколько минут.",
+    },
+    "ingest.installing_progress": {"en": "Installing the archive…", "ru": "Устанавливаю архив…"},
     "ingest.zip_title": {"en": "Upload a zip archive", "ru": "Загрузка zip-архива"},
     "ingest.zip_prompt": {
         "en": "Send the archive as a document, up to {limit}.\nIt is validated in memory, never written to "
@@ -212,6 +254,23 @@ STRINGS: Final[dict[str, dict[str, str]]] = {
     "settings.thresholds": {"en": "Thresholds", "ru": "Пороги"},
     "settings.accounts": {"en": "GitHub accounts", "ru": "Аккаунты GitHub"},
     "settings.events": {"en": "Events", "ru": "События"},
+    "settings.backup": {"en": "Backup", "ru": "Резервная копия"},
+    "backup.progress": {
+        "en": "Packing the project into an archive… this can take a moment.",
+        "ru": "Собираю архив проекта… это может занять некоторое время.",
+    },
+    "backup.caption": {
+        "en": "Backup ready — {count} files, {size}.\n.env and virtual environments are excluded.",
+        "ru": "Резервная копия готова — файлов: {count}, размер: {size}.\n"
+        ".env и виртуальные окружения не включены.",
+    },
+    "backup.too_large": {
+        "en": "The archive is {size}, which exceeds Telegram's {limit} upload limit. Trim the "
+        "hosted projects and try again.",
+        "ru": "Архив весит {size} — это больше лимита Telegram в {limit}. Уменьшите объём "
+        "данных проектов и попробуйте снова.",
+    },
+    "backup.failed": {"en": "Backup failed: {error}", "ru": "Не удалось создать резервную копию: {error}"},
     "alerts.title": {"en": "Alert rules", "ru": "Уведомления"},
     "alerts.page_hint": {
         "en": "Page {page}/{total}. Tap a rule to toggle delivery.",

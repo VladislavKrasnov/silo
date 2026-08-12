@@ -73,3 +73,7 @@ class FleetCommand(CallbackData, prefix="fleet"):
 
 class LocaleChoice(CallbackData, prefix="lang"):
     locale: str
+
+
+class BackupCommand(CallbackData, prefix="bkp"):
+    pass

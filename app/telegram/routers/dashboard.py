@@ -9,8 +9,16 @@ from app.telegram import views
 from app.telegram.callbacks import DashboardPage, EventsPage, FleetCommand, ProjectCommand, ProjectListPage
 from app.telegram.context import PanelContext
 from app.telegram.formatting import mono, render_action_result, render_logs
+from app.telegram.keyboards import build_fleet_confirmation_keyboard
 
 router = Router(name="dashboard")
+
+PROGRESS_KEYS: dict[str, str] = {
+    "start": "projects.progress_start",
+    "stop": "projects.progress_stop",
+    "restart": "projects.progress_restart",
+    "rebuild": "projects.progress_rebuild",
+}
 
 
 @router.message(Command("start"))
@@ -78,6 +86,48 @@ async def restart_fleet(callback: CallbackQuery, context: PanelContext, lang: st
 async def stop_fleet(callback: CallbackQuery, context: PanelContext, lang: str) -> None:
     await views.replace_message(callback, views.project_action_payload(context, "stop", 0, lang))
     await callback.answer()
+
+
+@router.callback_query(FleetCommand.filter(F.action == "stop-all-confirm"))
+async def confirm_stop_all(callback: CallbackQuery, lang: str) -> None:
+    await views.replace_message(
+        callback,
+        (
+            f"{translate('projects.stop_all_confirm_title', lang)}\n\n"
+            f"{translate('projects.stop_all_confirm_body', lang)}",
+            build_fleet_confirmation_keyboard("stop", lang),
+        ),
+    )
+    await callback.answer()
+
+
+@router.callback_query(FleetCommand.filter(F.action == "restart-all-confirm"))
+async def confirm_restart_all(callback: CallbackQuery, lang: str) -> None:
+    await views.replace_message(
+        callback,
+        (
+            f"{translate('projects.restart_all_confirm_title', lang)}\n\n"
+            f"{translate('projects.restart_all_confirm_body', lang)}",
+            build_fleet_confirmation_keyboard("restart", lang),
+        ),
+    )
+    await callback.answer()
+
+
+@router.callback_query(FleetCommand.filter(F.action == "stop-all-yes"))
+async def run_stop_all(callback: CallbackQuery, context: PanelContext, lang: str) -> None:
+    await callback.answer()
+    await views.show_transition(callback, translate("projects.progress_stop_all", lang))
+    await context.fleet.stop_all()
+    await views.replace_message(callback, views.project_action_payload(context, "stop", 0, lang))
+
+
+@router.callback_query(FleetCommand.filter(F.action == "restart-all-yes"))
+async def run_restart_all(callback: CallbackQuery, context: PanelContext, lang: str) -> None:
+    await callback.answer()
+    await views.show_transition(callback, translate("projects.progress_restart_all", lang))
+    await context.fleet.restart_all()
+    await views.replace_message(callback, views.project_action_payload(context, "restart", 0, lang))
 
 
 @router.message(Command("status", "stats"))
@@ -162,7 +212,8 @@ async def run_project_command(
         await callback.answer(translate("projects.already_stopped_alert", lang), show_alert=True)
         return
 
-    await callback.answer(f"{views.action_verb(action, lang)} {slug}.")
+    await callback.answer()
+    await views.show_transition(callback, translate(PROGRESS_KEYS[action], lang, slug=mono(slug)))
     await _apply_action(context, slug, action)
 
     menu_payload = await views.project_menu_payload(context, callback_data.index, lang)

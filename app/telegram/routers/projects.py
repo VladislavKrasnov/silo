@@ -27,7 +27,12 @@ from app.telegram.callbacks import (
 )
 from app.telegram.context import PanelContext
 from app.telegram.formatting import bold, mono
-from app.telegram.keyboards import build_account_choice_keyboard, build_confirmation_keyboard
+from app.telegram.keyboards import (
+    build_account_choice_keyboard,
+    build_back_to_project_keyboard,
+    build_confirmation_keyboard,
+    build_post_install_keyboard,
+)
 from app.telegram.states import IngestFlow
 
 router = Router(name="projects")
@@ -110,10 +115,12 @@ async def clone_repository(
 ) -> None:
     flow_data = await state.get_data()
     await state.clear()
-    await callback.answer(translate("ingest.cloning", lang))
+    await callback.answer()
 
     if callback.message is None:
         return
+
+    await views.show_transition(callback, translate("ingest.cloning_progress", lang))
 
     try:
         coordinates = parse_repository_url(flow_data["repository_url"])
@@ -124,11 +131,15 @@ async def clone_repository(
             account_id=callback_data.account_id or None,
         )
     except (IngestError, GitHubCloneError, KeyError) as error:
-        await callback.message.answer(translate("projects.install_failed", lang, error=mono(error)))
+        with contextlib.suppress(TelegramBadRequest):
+            await callback.message.edit_text(translate("projects.install_failed", lang, error=mono(error)))
         return
 
     await context.fleet.synchronize()
-    await callback.message.answer(_render_install_summary(outcome, lang))
+    index = context.fleet.index_of(outcome.slug)
+    markup = build_post_install_keyboard(index, lang) if index is not None else None
+    with contextlib.suppress(TelegramBadRequest):
+        await callback.message.edit_text(_render_install_summary(outcome, lang), reply_markup=markup)
 
 
 @router.callback_query(IngestCommand.filter(F.action == "archive"))
@@ -174,16 +185,22 @@ async def receive_archive(
     await state.clear()
     await _discard_message(message)
 
+    progress_message = await message.answer(translate("ingest.installing_progress", lang))
+
     try:
         outcome = await context.pipeline.ingest_archive(payload, slug)
     except IngestError as error:
-        await message.answer(translate("projects.install_failed", lang, error=mono(error)))
+        with contextlib.suppress(TelegramBadRequest):
+            await progress_message.edit_text(translate("projects.install_failed", lang, error=mono(error)))
         return
     finally:
         del payload
 
     await context.fleet.synchronize()
-    await message.answer(_render_install_summary(outcome, lang))
+    index = context.fleet.index_of(outcome.slug)
+    markup = build_post_install_keyboard(index, lang) if index is not None else None
+    with contextlib.suppress(TelegramBadRequest):
+        await progress_message.edit_text(_render_install_summary(outcome, lang), reply_markup=markup)
 
 
 @router.callback_query(ProjectCommand.filter(F.action == "refresh"))
@@ -196,14 +213,20 @@ async def refresh_project(
         await callback.answer(translate("projects.no_longer_exists", lang), show_alert=True)
         return
 
-    await callback.answer(translate("projects.pulling", lang))
+    await callback.answer()
+    await views.show_transition(callback, translate("projects.progress_pull", lang, slug=mono(slug)))
     await supervisor.stop(announce=False)
 
     try:
         await context.pipeline.refresh_from_github(slug)
     except (IngestError, GitHubCloneError) as error:
-        if callback.message is not None:
-            await callback.message.answer(translate("projects.pull_failed", lang, error=mono(error)))
+        await views.replace_message(
+            callback,
+            (
+                translate("projects.pull_failed", lang, error=mono(error)),
+                build_back_to_project_keyboard(callback_data.index, lang),
+            ),
+        )
         return
 
     await supervisor.rebuild()
@@ -240,7 +263,8 @@ async def delete_project(
         await callback.answer(translate("projects.no_longer_exists", lang), show_alert=True)
         return
 
-    await callback.answer(translate("projects.deleting", lang))
+    await callback.answer()
+    await views.show_transition(callback, translate("projects.progress_delete", lang, slug=mono(slug)))
     await context.fleet.detach(slug)
     await context.pipeline.remove(slug)
     await context.fleet.synchronize()

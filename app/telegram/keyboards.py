@@ -11,6 +11,7 @@ from app.telegram.callbacks import (
     AccountChoice,
     AccountCommand,
     AlertToggle,
+    BackupCommand,
     ConfirmCommand,
     DashboardPage,
     EventsPage,
@@ -80,6 +81,11 @@ def build_main_menu_keyboard(lang: str) -> InlineKeyboardMarkup:
                     callback_data=SettingsSection(section="root", page=0).pack(),
                 ),
             ],
+            [
+                InlineKeyboardButton(
+                    text=translate("menu.status", lang), callback_data=DashboardPage(page=0).pack()
+                )
+            ],
         ]
     )
 
@@ -117,10 +123,19 @@ def build_dashboard_keyboard(page: Page, lang: str) -> InlineKeyboardMarkup:
     )
 
 
-def _project_button_label(slug: str, status_by_slug: dict[str, bool] | None) -> str:
+def _project_button_label(slug: str, status_by_slug: dict[str, bool] | None, lang: str) -> str:
     if status_by_slug is None:
         return slug
-    return f"{'🟢' if status_by_slug[slug] else '⚪'} {slug}"
+    status_word = translate(
+        "projects.status_running" if status_by_slug[slug] else "projects.status_stopped", lang
+    )
+    return f"{status_word} — {slug}"
+
+
+_BULK_ACTION_KEYS: dict[str, str] = {
+    "stop": "projects.stop_all_button",
+    "restart": "projects.restart_all_button",
+}
 
 
 def build_project_action_keyboard(
@@ -130,10 +145,21 @@ def build_project_action_keyboard(
     lang: str,
     status_by_slug: dict[str, bool] | None = None,
 ) -> InlineKeyboardMarkup:
-    rows = [
+    rows: list[list[InlineKeyboardButton]] = []
+    bulk_action_key = _BULK_ACTION_KEYS.get(action)
+    if bulk_action_key is not None and page.items:
+        rows.append(
+            [
+                InlineKeyboardButton(
+                    text=translate(bulk_action_key, lang),
+                    callback_data=FleetCommand(action=f"{action}-all-confirm").pack(),
+                )
+            ]
+        )
+    rows += [
         [
             InlineKeyboardButton(
-                text=_project_button_label(slug, status_by_slug),
+                text=_project_button_label(slug, status_by_slug, lang),
                 callback_data=ProjectCommand(action=action, index=slug_to_index[slug]).pack(),
             )
         ]
@@ -231,13 +257,47 @@ def build_project_menu_keyboard(
             InlineKeyboardButton(
                 text=translate("projects.button_delete", lang),
                 callback_data=ConfirmCommand(action="delete", index=index).pack(),
-            ),
+            )
+        ]
+    )
+    rows.append(
+        [
             InlineKeyboardButton(
                 text=translate("common.back", lang), callback_data=ProjectCatalogPage(page=0).pack()
-            ),
+            )
         ]
     )
     return InlineKeyboardMarkup(inline_keyboard=rows)
+
+
+def build_post_install_keyboard(index: int, lang: str) -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text=translate("projects.open_project", lang),
+                    callback_data=ProjectMenu(index=index).pack(),
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text=translate("common.back", lang), callback_data=ProjectCatalogPage(page=0).pack()
+                )
+            ],
+        ]
+    )
+
+
+def build_back_to_project_keyboard(index: int, lang: str) -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text=translate("common.back", lang), callback_data=ProjectMenu(index=index).pack()
+                )
+            ]
+        ]
+    )
 
 
 def build_confirmation_keyboard(action: str, index: int, lang: str) -> InlineKeyboardMarkup:
@@ -251,6 +311,23 @@ def build_confirmation_keyboard(action: str, index: int, lang: str) -> InlineKey
                 InlineKeyboardButton(
                     text=translate("projects.cancel_button", lang),
                     callback_data=ProjectMenu(index=index).pack(),
+                ),
+            ]
+        ]
+    )
+
+
+def build_fleet_confirmation_keyboard(action: str, lang: str) -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text=translate("projects.confirm", lang),
+                    callback_data=FleetCommand(action=f"{action}-all-yes").pack(),
+                ),
+                InlineKeyboardButton(
+                    text=translate("projects.cancel_button", lang),
+                    callback_data=FleetCommand(action=action).pack(),
                 ),
             ]
         ]
@@ -325,6 +402,11 @@ def build_settings_root_keyboard(lang: str) -> InlineKeyboardMarkup:
                 InlineKeyboardButton(
                     text=translate("language.settings_row", lang),
                     callback_data=SettingsSection(section="language", page=0).pack(),
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text=translate("settings.backup", lang), callback_data=BackupCommand().pack()
                 )
             ],
             [

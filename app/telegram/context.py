@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from pathlib import Path
 
 from app.alerts.dispatcher import AlertDispatcher
 from app.alerts.settings import AlertSettingsStore
@@ -30,3 +31,4 @@ class PanelContext:
     locales: LocaleStore
     admin_ids: frozenset[int]
     github_oauth_client_id: str | None
+    database_path: Path

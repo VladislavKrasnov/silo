@@ -185,3 +185,10 @@ async def replace_message(callback: CallbackQuery, payload: Payload) -> None:
         return
     with contextlib.suppress(TelegramBadRequest):
         await callback.message.edit_text(payload[0], reply_markup=payload[1])
+
+
+async def show_transition(callback: CallbackQuery, text: str) -> None:
+    if callback.message is None:
+        return
+    with contextlib.suppress(TelegramBadRequest):
+        await callback.message.edit_text(text, reply_markup=None)

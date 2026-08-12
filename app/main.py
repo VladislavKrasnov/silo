@@ -125,6 +125,7 @@ class ApplicationController:
             locales=locales,
             admin_ids=self.config.admin_ids,
             github_oauth_client_id=self.config.github_oauth_client_id,
+            database_path=self.config.database_path,
         )
         return context, sampler, fleet
 
