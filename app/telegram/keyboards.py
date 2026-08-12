@@ -117,13 +117,24 @@ def build_dashboard_keyboard(page: Page, lang: str) -> InlineKeyboardMarkup:
     )
 
 
+def _project_button_label(slug: str, status_by_slug: dict[str, bool] | None) -> str:
+    if status_by_slug is None:
+        return slug
+    return f"{'🟢' if status_by_slug[slug] else '⚪'} {slug}"
+
+
 def build_project_action_keyboard(
-    action: str, page: Page[str], slug_to_index: dict[str, int], lang: str
+    action: str,
+    page: Page[str],
+    slug_to_index: dict[str, int],
+    lang: str,
+    status_by_slug: dict[str, bool] | None = None,
 ) -> InlineKeyboardMarkup:
     rows = [
         [
             InlineKeyboardButton(
-                text=slug, callback_data=ProjectCommand(action=action, index=slug_to_index[slug]).pack()
+                text=_project_button_label(slug, status_by_slug),
+                callback_data=ProjectCommand(action=action, index=slug_to_index[slug]).pack(),
             )
         ]
         for slug in page.items

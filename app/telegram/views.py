@@ -34,7 +34,7 @@ ACTION_TITLE_KEYS: dict[str, str] = {
 ACTION_EMPTY_KEYS: dict[str, str] = {
     "start": "projects.all_running",
     "stop": "projects.none_running",
-    "restart": "projects.none_running",
+    "restart": "projects.empty",
 }
 ACTION_TITLES: dict[str, str] = ACTION_TITLE_KEYS
 
@@ -71,16 +71,26 @@ def dashboard_payload(context: PanelContext, page_index: int, lang: str) -> Payl
 
 
 def project_action_payload(context: PanelContext, action: str, page_index: int, lang: str) -> Payload:
-    candidates = context.fleet.stopped_slugs() if action == "start" else context.fleet.running_slugs()
+    if action == "start":
+        candidates = context.fleet.stopped_slugs()
+    elif action == "restart":
+        candidates = context.fleet.sorted_slugs
+    else:
+        candidates = context.fleet.running_slugs()
     page = paginate(candidates, page_index, PROJECT_LIST_PAGE_SIZE)
     slug_to_index = {
         slug: index for index, slug in enumerate(context.fleet.sorted_slugs) if slug in page.items
     }
+    status_by_slug = (
+        {slug: context.fleet.supervisors[slug].is_active for slug in page.items}
+        if action == "restart"
+        else None
+    )
     return (
         formatting.render_project_list(
             translate(ACTION_TITLE_KEYS[action], lang), page, translate(ACTION_EMPTY_KEYS[action], lang), lang
         ),
-        keyboards.build_project_action_keyboard(action, page, slug_to_index, lang),
+        keyboards.build_project_action_keyboard(action, page, slug_to_index, lang, status_by_slug),
     )
 
 
