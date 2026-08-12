@@ -1,22 +1,53 @@
-# Bot Fleet Orchestrator
+# Silo
 
 ![License](https://img.shields.io/badge/license-MIT-informational)
 ![Runs on](https://img.shields.io/badge/runs%20on-Linux%20%7C%20Docker-informational)
 ![Interface](https://img.shields.io/badge/interface-Telegram-informational)
 
-**Run all your Telegram bots on one server, install and manage every one of them from a Telegram
-chat, and never worry about one bot breaking another again.**
+### Your entire bot fleet. One chat. Zero terminal.
 
-No terminal, no server dashboard, no juggling `.env` files by hand. You send a GitHub link or a
-zip file to your bot, it does the rest — and every project it runs is locked in its own sealed
-box, so a bug or a malicious dependency in one bot can never touch another bot, your server, or
-your data.
+You've got bots scattered across a server, each one a `screen` session you're afraid to close,
+an `.env` file you can't remember the shape of, a `pip install` you're praying doesn't collide
+with the one next to it. One of them goes down at 3am and you find out from an angry user, not
+from your server.
 
-## Get it running in five minutes
+**Silo ends that.** Send it a GitHub link or a zip file, from Telegram, and thirty seconds later
+your bot is live — built, isolated, monitored, and yours to control with a tap, forever, from
+your phone.
 
-You need three things: a small server or computer with [Docker](https://docs.docker.com/get-docker/)
-installed, a bot token from [@BotFather](https://t.me/BotFather), and your numeric Telegram ID
-from [@userinfobot](https://t.me/userinfobot).
+<p align="center">
+  <img src="assets/demo.gif" alt="Silo — install, watch, and control a bot fleet from Telegram" width="720">
+</p>
+
+## Why people who try this don't go back to a terminal
+
+- **Install by sending a link.** GitHub repo or zip file, dropped straight into the chat. No SSH,
+  no `git clone`, no dependency wrangling — it's built and running before you'd have finished
+  typing the commands by hand.
+- **Every bot lives in a sealed box.** Real isolation — the same class of sandboxing container
+  platforms are built on — so one bot's bad dependency, memory leak, or bug can never touch
+  another bot, your server, or your data. Nothing spills over. Ever.
+- **It watches your fleet so you don't have to.** A bot crashes, fails to build, restart-loops, or
+  runs low on a required secret — you know in seconds, not when a user complains. The server
+  running hot gets flagged before it becomes an outage.
+- **It heals itself.** Crashed bots come back with sensible backoff, no page needed. Reboot the
+  server and everything you marked autostart is back up before you've poured coffee.
+- **Your secrets are actually secret.** Every key and token is encrypted the instant you send it,
+  and scrubbed automatically from logs, errors, and alerts — so a stray `print()` in someone's bot
+  can never leak a credential to the whole chat.
+- **It speaks your language, not just English.** Full Russian and English interfaces, switching
+  automatically to match your Telegram client.
+- **GitHub, linked with one tap.** No copy-pasting personal access tokens — approve a code on
+  github.com and you're connected.
+- **It's entirely yours.** No cloud dashboard, no subscription, no third party in the loop besides
+  Telegram and GitHub. It runs on hardware you control, and the moment you stop paying attention
+  to it, it keeps running anyway.
+
+## Five minutes from clone to live control panel
+
+You need three things: a small server or machine with
+[Docker](https://docs.docker.com/get-docker/), a bot token from [@BotFather](https://t.me/BotFather),
+and your numeric Telegram ID from [@userinfobot](https://t.me/userinfobot).
 
 ```
 git clone https://github.com/VladislavKrasnov/silo.git
@@ -24,49 +55,25 @@ cd silo
 cp .env.example .env
 ```
 
-Open the new `.env` file and fill in two lines:
+Open `.env` and fill in two lines:
 
 ```
 MASTER_BOT_TOKEN=the token BotFather gave you
 ADMIN_IDS=your numeric Telegram ID
 ```
 
-Then start it:
+Then:
 
 ```
 docker compose up -d --build
 ```
 
-Open a chat with your bot and send `/start`. That's it — the control panel is live, and
-**Projects → Install** is where you add your first bot.
-
-## What it actually does
-
-- **Installs bots for you.** Send a GitHub repository link or upload a zip file straight into the
-  chat, and it's built, configured and running within moments — no manual setup, no SSH session.
-- **Keeps every bot in its own sealed box.** Each project runs in an isolated environment that
-  cannot see another bot's files, memory, or secrets — and cannot reach your server's files either.
-  If one project misbehaves, everything else keeps running untouched.
-- **Never stores your secrets in plain text.** API keys and tokens are encrypted the moment you
-  send them, and are automatically hidden wherever they might otherwise leak — logs, error
-  messages, alerts.
-- **Watches your fleet around the clock.** You get an instant message the moment a bot crashes,
-  fails to build, keeps restarting, runs low on required secrets, or the server itself is under
-  pressure — so you find out before your users do.
-- **Restarts itself when things go wrong.** Crashed bots come back automatically with sensible
-  backoff, and everything can be configured to start on its own whenever the server reboots.
-- **Speaks your language.** The whole control panel works in English and Russian, and switches
-  automatically based on your Telegram settings.
-- **Connects GitHub with one tap.** Link a GitHub account without ever copying a token by hand —
-  approve a code on github.com and you're done.
-- **Runs entirely on your own server.** Nothing is sent to a third party, there's no external
-  service dependency beyond Telegram and GitHub, and everything — bots, secrets, settings — lives
-  in one place you fully control.
+Open a chat with your bot, send `/start`, and you're looking at your live control panel.
+**Projects → Install** is where your first bot goes in.
 
 ## Commands
 
-Everything is reachable through buttons, but the full command list also works if you'd rather
-type:
+Everything is a tap away, but the full command set is here if you'd rather type:
 
 | Command | What it does |
 |---|---|
@@ -84,9 +91,9 @@ type:
 
 ## Built on
 
-Python, the Telegram Bot API, and industry-standard sandboxing (the same class of technology
-container platforms use) and AES-256 encryption for anything sensitive. No paid add-ons, no
-external database, no vendor lock-in — it's a single self-hosted application you own outright.
+Python, the Telegram Bot API, real OS-level sandboxing, and AES-256 encryption for anything
+sensitive. No paid add-ons, no external database, no vendor lock-in — one self-hosted application
+you own outright, top to bottom.
 
 <details>
 <summary><strong>Advanced: all configuration options</strong></summary>
